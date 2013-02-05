@@ -1,0 +1,78 @@
+taikosu(osu file format v9):
+
+基本元素：
+	0.无音效 --> 咚
+	1.finish --> 大咚
+	2.slider --> 黄条
+	3.clap --> 咔
+	4.finish+clap->大咔
+	5.spinner->气球连打
+
+Timing相关：
+	1.绿线,bpm倍速，SCROLL变速
+	2.绿线，timing signiture，变更
+
+AudioFilename:音源文件名
+Title:Super Mario Bros. (Old)歌曲名
+Source:相当于taiko jiro的Subtitle
+Artist:Nintendo
+Creator:lepidopodus
+Version:Oni（难度？）
+
+[TimingPoints]这里记录了timing section，格式分析
+
+example:
+125,598.802395209581,4,1,0,100,1,0
+125-->offset
+598.802395209581-->每拍长度毫秒数，如果为负数x,则BPM倍数为-100/x
+4-->每小节的拍数
+1-->1:normal 2:soft
+0-->0:default 1:custom1 2:custom2
+100->volume
+1-->红线or绿线
+0-->kiai ==> Go Go Time
+
+SCROLL SPEED: BPM越高scroll速度越快，绿线同样处理
+[HitObject]Note解析
+
+
+Circle,example:
+416,176,1921,1,4
+x,y,t,type(type&1=1),sound
+
+hit object type: 
+	1:circle
+	2:slider
+	1<<2:new combo
+	12:spinner
+	
+
+sound: 4:finish, 8:clap
+	1<<2:finish
+	1<<3:clap
+
+	don: 0
+	ka:  1<<3=8
+	big don:1<<2=4
+	big ka:1<<2+1<<3=12
+	黄条:slider with sound = 0
+	大黄条:slider with hit sound = finish
+	气球连打：spinner
+
+Slider,example:
+332,267,105214,2,4,L|160:224,1,161.000005277991,0|0
+x,y,t,type(type&2=2),sound,line_type(L=line,B=Besier)|control_point(x:y),reverse_count,tot_len,end_point_sound
+
+
+Spinner,example:
+256,192,119684,12,0,120882
+x,y,t,type,sound,end_t
+
+
+slider tot_len:
+tot_len * reverse_count = 100 * 拍数 * slider_velocity * BPM_muliplier
+super mario bros.(Old)
+tot_len = 100 * 1 * 1.4 * 1.15 / 1= 161
+
+特殊规则，8分音slider转note
+
