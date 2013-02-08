@@ -319,7 +319,7 @@ def write_incomplete_bar(tm, bar_data, begin, end):
 		#print "MY_BEAT_CNT", my_beat_cnt
 		for beat_cnt, str in measure_table:
 			#print "FIND A CLOSEST MEASURE", beat_cnt, min_beat_cnt
-			#print int(begin + beat_cnt * 60000.0 / tm["bpm"]), end
+#			print begin, int(begin + beat_cnt * 60000.0 / tm["bpm"]), end
 			if beat_cnt >= min_beat_cnt and \
 					int(begin + beat_cnt * 60000.0 / tm["bpm"]) <= end:
 				commands.append((MEASURECHANGE, int(begin), str))			   
@@ -350,7 +350,7 @@ def write_incomplete_bar(tm, bar_data, begin, end):
 	print "//[Warning] This may be erronous!!"
 	print "#MEASURE %d/%d" % (numerator, denominator)
 	write_bar_data(tm, bar_data, begin, begin + min_beat_cnt * tpb)
-	delay_time = end - begin - min_beat_cnt * 60000.0 / tm["bpm"]
+	delay_time = end - int(begin + min_beat_cnt * 60000.0 / tm["bpm"])
 	if delay_time >= 1:
 		print "#DELAY", delay_time / 1000.0
 	return
