@@ -102,6 +102,7 @@ def get_timing_point(str, prev_timing_point=None):
 			assert False
 		ret["beats"] = int(beats) # measure change
 		ret["GGT"] = (is_ggt != '0')
+
 	except:
 		print "Osu file Error, at [TimingPoints] section, please check"
 		return {}
@@ -118,6 +119,7 @@ tail_fix = False
 slider_break_limit = None
 taiko_mode = False
 osu_format_ver = 0
+commands_within = []
 
 # debug args
 show_head_info = False
@@ -326,7 +328,7 @@ def write_incomplete_bar(tm, bar_data, begin, end):
 				print "#MEASURE", commands[-1][2]
 				write_bar_data(tm, bar_data, begin, begin + beat_cnt * tpb)
 				commands.append((DELAY, bar_data[-1][1], 
-					end - begin - beat_cnt * 60000.0 / tm["bpm"]))
+					end - int(begin+ beat_cnt * 60000.0 / tm["bpm"])))
 				assert commands[-1][2] >= 0, "DELAY FAULT %f" % commands[-1][2]
 	
 				# jiro will ignore delays short than 0.001s
@@ -359,6 +361,7 @@ has_written_once = False
 def write_bar_data(tm, bar_data, begin, end):
 	global show_head_info
 	global has_written_once, combo_cnt, delays, tail_fix
+	global commands_within
 	if has_written_once:
 		return
 
@@ -384,11 +387,38 @@ def write_bar_data(tm, bar_data, begin, end):
 		write_bar_data(tm, bar_data[:-1], begin, end)
 		return
 
+	ret_str = ""
+#	print "begin = ", begin
+	# TODO: fix this!
+	if len(bar_data) == 0:
+		offset = begin
+		# Insert commands!
+		while commands_within and int(offset) >= int(commands_within[0][0]):
+			if commands_within[0][1] == SCROLLCHANGE:
+				ret_str += "\n#SCROLL %f\n" % commands_within[0][2]
+			elif commands_within[0][1] == GOGOSTART:
+				ret_str += "\n#GOGOSTART\n"
+			else:
+				ret_str += "\n#GOGOEND\n"
+#			print "command! off=%d, %f" % (int(offset), commands_within[0][0])
+				
+			commands_within = commands_within[1:]
+			
 	delta_gcd = gcd_of_list(delta_list)
-	ret_str = "0"*(delta_list[0]/delta_gcd)
+	ret_str += "0"*(delta_list[0]/delta_gcd)
 	empty_t_unit = map(lambda x:"0"*(x/delta_gcd-1), delta_list[1:])
-
+					
 	for empty_t_unit_cnt, (note, offset) in zip(empty_t_unit, bar_data):
+		# Insert commands!
+		while commands_within and int(offset) >= int(commands_within[0][0]):
+			if commands_within[0][1] == SCROLLCHANGE:
+				ret_str += "\n#SCROLL %f\n" % commands_within[0][2]
+			elif commands_within[0][1] == GOGOSTART:
+				ret_str += "\n#GOGOSTART\n"
+			else:
+				ret_str += "\n#GOGOEND\n"
+			commands_within = commands_within[1:]
+#			print "command! off=%d, %f" % (int(offset), commands_within[0][0])
 		ret_str += repr(note) + empty_t_unit_cnt
 	   
 	head = "%4d %6d %.2f %2d " % (combo_cnt, int(begin)//60000*100000+int(begin)%60000, delta_gcd/24.0, len(ret_str))
@@ -428,6 +458,7 @@ def osu2tja(filename):
 	global slider_velocity, timingpoints
 	global ballons, commands, tail_fix, ignore_format_ver
 	global osu_format_ver
+	global commands_within
 
 	# check filename
 	if not filename.lower().endswith(".osu"):
@@ -525,6 +556,19 @@ def osu2tja(filename):
 		new_tm_first = dict(timingpoints[0])
 		new_tm_first["offset"] = int(hitobjects[0][1])
 		timingpoints = [new_tm_first] + timingpoints
+	
+	# collect all #SCROLL #GOGOSTART #GOGOEND commands
+	# these commands will not be broken by #BPMCHANGE or # MEASURE
+	cur_scroll = 1.0
+	cur_ggt = False
+	for tm in timingpoints:
+		if tm["scroll"] != cur_scroll:
+			commands_within.append((tm["offset"], SCROLLCHANGE, tm["scroll"]))
+		if tm["GGT"] != cur_ggt:
+			commands_within.append((tm["offset"], 
+				tm["GGT"] and GOGOSTART or GOGOEND))
+		cur_scroll = tm["scroll"]
+		cur_ggt = tm["GGT"]
 		
 	BPM = timingpoints[0]["bpm"]
 	OFFSET = timingpoints[0]["offset"] / 1000.0
