@@ -115,7 +115,7 @@ def get_timing_point(str, prev_timing_point=None):
 	# fill a timing point dict
 	ret = {}
 	try:
-		ret["offset"] = int(offset) # time 
+		ret["offset"] = float(offset) # time 
 		if float(rawbpmv) > 0:	   # BPM change or SCROLL speed change
 			bpm = ret["bpm"] = 60 * 1000.0 / float(rawbpmv)
 			ret["scroll"] = 1.0
