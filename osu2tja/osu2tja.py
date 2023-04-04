@@ -79,7 +79,7 @@ def get_base_timing_point(timing_points, t):
 def get_base_red_timing_point(timing_points, t):
 	def is_red_timing_point(timing_point):
 		return timing_point["redline"]
-	red_timing_points = filter(is_red_timing_point, timing_points)
+	red_timing_points = list(filter(is_red_timing_point, timing_points))
 	return get_base_timing_point(red_timing_points, t)
 		
 # ----------------------
@@ -199,7 +199,7 @@ def get_slider_sound(str):
 	if len(ps) == 8:
 		return [int(ps[4])] * (reverse_cnt + 1)
 	else:
-		return map(lambda x:int(x), ps[8].split('|'))
+		return list(map(lambda x:int(x), ps[8].split('|')))
 
 def get_donkatsu_by_sound(sound):
 	if sound == HITSND_NORMAL:
