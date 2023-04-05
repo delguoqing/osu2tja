@@ -606,7 +606,7 @@ def osu2tja(filename):
 				bar_cnt += 1
 				bar_offset_begin = get_real_offset(end)
 				bar_max_length = measure * time_per_beat								
-			elif int(end) == next_measure_offset: # collect an incomplete bar?
+			elif int(end) == int(next_measure_offset): # collect an incomplete bar?
 				write_incomplete_bar(get_base_timing_point(timingpoints, bar_offset_begin), \
 						bar_data, bar_offset_begin, end)
 				bar_data = []
