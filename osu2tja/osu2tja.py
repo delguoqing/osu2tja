@@ -349,11 +349,11 @@ def write_incomplete_bar(tm, bar_data, begin, end):
 		numerator *= fix_mul
 		
 	print("//[Warning] This may be erronous!!")
-	print(make_cmd(MEASURE, numerator, denominator))
+	print(make_cmd(FMT_MEASURECHANGE, numerator, denominator))
 	write_bar_data(tm, bar_data, begin, begin + min_beat_cnt * tpb)
 	delay_time = end - int(begin + 1.0 * min_beat_cnt * T_MINUTE / tm["bpm"])
 	if delay_time >= 1:
-		print(make_cmd(DELAY, delay_time / 1000.0))
+		print(make_cmd(FMT_DELAY, delay_time / 1000.0))
 	return
 
 def write_bar_data(tm, bar_data, begin, end):
