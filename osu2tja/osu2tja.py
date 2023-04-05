@@ -1,4 +1,5 @@
 # -*- coding: gbk -*-
+from functools import reduce
 import sys
 import optparse
 import copy
@@ -361,7 +362,7 @@ def write_bar_data(tm, bar_data, begin, end):
 	global commands_within
 
 	t_unit = 60.0 * 1000 / tm["bpm"] / 24
-	offset_list = [int(begin)] + map(lambda datum: datum[1], bar_data) + \
+	offset_list = [int(begin)] + list(map(lambda datum: datum[1], bar_data)) + \
 			[int(end)]
 	#print offset_list
 	delta_list = []
@@ -390,8 +391,8 @@ def write_bar_data(tm, bar_data, begin, end):
 			commands_within = commands_within[1:]
 			
 	delta_gcd = gcd_of_list(delta_list)
-	ret_str += "0"*(delta_list[0]/delta_gcd)
-	empty_t_unit = map(lambda x:"0"*(x/delta_gcd-1), delta_list[1:])
+	ret_str += "0" * (delta_list[0] // delta_gcd)
+	empty_t_unit = list(map(lambda x:"0"*(x // delta_gcd-1), delta_list[1:]))
 					
 	for empty_t_unit_cnt, (note, offset) in zip(empty_t_unit, bar_data):
 		# Insert commands!
